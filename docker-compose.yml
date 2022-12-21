@@ -1,0 +1,11 @@
+version: '3.6'
+
+services:
+  arxiv-update-bot:
+    image: nanoy/arxiv-update-bot
+    environment:
+      - AUB_TOKEN=0000000000:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+      - AUB_CHAT_IDS=0
+      - AUB_CATEGORIES=quant-ph
+      - AUB_BUZZWORDS=cvqkd,cv-qkd,continuous variable,continuous-variable,qkd,quantum key distribution,rfsoc,fpga
+      - AUB_CRONTAB=0 10 * * *
