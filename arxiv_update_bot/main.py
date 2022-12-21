@@ -127,6 +127,13 @@ def main():
         action="store_true",
         help="If quiet is set, then the bot will not send message if no article are found.",
     )
+    parser.add_argument(
+        "-p",
+        "--print-info",
+        action="store_true",
+        help="If print-info is set, then the bot will send its configuration instead of the updates.",
+    )
+
     args = parser.parse_args()
     config_path = args.config_path or DEFAULT_CONFIGURATION_PATH
     quiet = args.quiet
@@ -136,9 +143,19 @@ def main():
     bot = telebot.TeleBot(token, parse_mode="HTML")
 
     for update in updates:
-        send_articles(
-            bot, update["chat_id"], update["category"], update["buzzwords"], quiet=quiet
-        )
+        if args.print_info:
+            bot.send_message(
+                update["chat_id"],
+                text=f"Hi there ! I am configured to send articles from category {update['category']} with buzzwords {', '.join(update['buzzwords'])}",
+            )
+        else:
+            send_articles(
+                bot,
+                update["chat_id"],
+                update["category"],
+                update["buzzwords"],
+                quiet=quiet,
+            )
 
 
 if __name__ == "__main__":
