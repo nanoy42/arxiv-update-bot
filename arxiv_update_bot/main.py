@@ -1,13 +1,49 @@
+"""
+Main file of the arxiv_update_bot module.
+
+Contains the methods to read configuration,
+fetch updates and send messages along with the cli.
+"""
 import argparse
 import configparser
+from typing import List, Tuple
 
 import feedparser
 import telebot
 
 DEFAULT_CONFIGURATION_PATH = "/etc/arxiv-update-bot/config.ini"
 
+# pylint: disable=too-few-public-methods
+class Update:
+    """
+    Class representing an update section in the configuration file.
 
-def load_config(path):
+    It is composed of a category, a chat id and a list of buzzwords.
+    """
+
+    chat_id: int  #: The chat id to send the update to.
+    category: str  #: The arxiv category.
+    buzzwords: List[str]  #: The list of buzzwords to trigger on.
+
+    def __init__(self, config: dict) -> None:
+        """Initialize the update instance.
+
+        Args:
+            config (dict): section of the configuration corresponding to the update.
+
+        Raises:
+            Exception: if the section is not complete (i.e. missing one of category, chat_id or buzzwords).
+        """
+        if not ("category" in config and "chat_id" in config and "buzzwords" in config):
+            raise Exception(
+                f"The section {config} is not complete. Missing one of three : category, chat_id or buzzwords."
+            )
+        self.category = config["category"]
+        self.chat_id = config["chat_id"]
+        self.buzzwords = config["buzzwords"].split(",")
+
+
+def load_config(path: str) -> Tuple[str, List[Update]]:
     """Load the configuration from the path.
     It will try to load the token from the [bot] section.
     Then it will iterate over the other sections to find the updates to verify.
@@ -39,37 +75,22 @@ def load_config(path):
     updates = []
     for section in config.sections():
         if str(section) != "bot":
-            current_section = config[section]
-            if not (
-                "category" in current_section
-                and "chat_id" in current_section
-                and "buzzwords" in current_section
-            ):
-                raise Exception(
-                    f"The section {current_section} is not complete. Missing one of three : category, chat_id or buzzwords."
-                )
-            updates.append(
-                {
-                    "category": current_section["category"],
-                    "chat_id": current_section["chat_id"],
-                    "buzzwords": current_section["buzzwords"].split(","),
-                }
-            )
+            updates.append(Update(config[section]))
     return token, updates
 
 
-def get_articles(category, buzzwords):
+def get_articles(category: str, buzzwords: List[str]) -> List:
     """Get the articles from arXiv.
 
     It get the RSS flux re;ated to the category of the update,
     then filter the entries with the buzzwords.
 
     Args:
-        category (string): the name of the category.
-        buzzwords (list): a list of buzzwords.
+        category (str): the name of the category.
+        buzzwords (List[str]): a list of buzzwords.
 
     Returns:
-        list: list of entries.
+        List: list of entries.
     """
     news_feed = feedparser.parse(f"http://export.arxiv.org/rss/{category}")
     res = []
@@ -81,14 +102,20 @@ def get_articles(category, buzzwords):
     return res
 
 
-def send_articles(bot, chat_id, category, buzzwords, quiet=False):
+def send_articles(
+    bot: telebot.TeleBot,
+    chat_id: int,
+    category: str,
+    buzzwords: List[str],
+    quiet: bool = False,
+) -> None:
     """Send the articles to telegram.
 
     Args:
-        bot (Telebot): telebot instance.
+        bot (telebot.Telebot): telebot instance.
         chat_id (int): the chat id to send the message. Either a group or individual.
-        category (string): the category for arXiv.
-        buzzwords (list): list of buzzwords.
+        category (str): the category for arXiv.
+        buzzwords (List[str]): list of buzzwords.
         quiet (bool, optional): whether to send a messae when no article is found. Defaults to False.
     """
     articles = get_articles(category, buzzwords)
@@ -145,15 +172,15 @@ def main():
     for update in updates:
         if args.print_info:
             bot.send_message(
-                update["chat_id"],
-                text=f"Hi there ! I am configured to send articles from category {update['category']} with buzzwords {', '.join(update['buzzwords'])}",
+                update.chat_id,
+                text=f"Hi there ! I am configured to send articles from category {update.category} with buzzwords {', '.join(update.buzzwords)}",
             )
         else:
             send_articles(
                 bot,
-                update["chat_id"],
-                update["category"],
-                update["buzzwords"],
+                update.chat_id,
+                update.category,
+                update.buzzwords,
                 quiet=quiet,
             )
 

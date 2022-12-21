@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "arxiv_update_bot"
-version = "0.1.2"
+version = "0.8.0"
 description = "A bot to monitor arXiv updates"
 authors = ["Yoann Piétri <me@nanoy.fr>"]
 license = "MIT"
