@@ -96,7 +96,7 @@ def get_articles(category: str, buzzwords: List[str]) -> List:
     res = []
     for entry in news_feed.entries:
         for buzzword in buzzwords:
-            if buzzword in entry.title.lower():
+            if buzzword in entry.title.lower() and entry not in res:
                 res.append(entry)
 
     return res
