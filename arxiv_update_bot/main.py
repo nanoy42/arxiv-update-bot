@@ -134,7 +134,7 @@ def send_articles(
         for article in articles:
             bot.send_message(
                 chat_id,
-                text=f"<strong>Title</strong>: {article.title}\n<strong>Authors</strong>: {article.authors[0]['name']}\n<strong>Link</strong>: {article.id}",
+                text=f"<strong>Title</strong>: {article.title}\n<strong>Authors</strong>: {article.authors[0]['name']}\n<strong>Link</strong>: {article.link}",
             )
 
 
