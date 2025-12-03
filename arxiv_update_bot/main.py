@@ -96,7 +96,7 @@ def get_articles(category: str, buzzwords: List[str]) -> List:
     res = []
     for entry in news_feed.entries:
         for buzzword in buzzwords:
-            if buzzword in entry.title.lower():
+            if buzzword in entry.title.lower() and entry not in res:
                 res.append(entry)
 
     return res
@@ -132,10 +132,22 @@ def send_articles(
             text=f"You are going to be happy. I found {len(articles)} article(s) of potential interest.",
         )
         for article in articles:
-            bot.send_message(
-                chat_id,
-                text=f"<strong>Title</strong>: {article.title}\n<strong>Authors</strong>: {article.authors[0]['name']}\n<strong>Link</strong>: {article.id}",
-            )
+            msg = f"<strong>Title</strong>: {article.title}\n<strong>Authors</strong>: {article.authors[0]['name']}\n<strong>Link</strong>: {article.link}"
+            if len(msg) > 4095:
+                sent_msg = bot.send_message(
+                    chat_id,
+                    text=msg[:4095],
+                )
+                for i in range(4095, len(msg), 4095):
+                    bot.reply_to(
+                        sent_msg,
+                        text=msg[i : i + 4095],
+                    )
+            else:
+                bot.send_message(
+                    chat_id,
+                    text=msg,
+                )
 
 
 def main():
